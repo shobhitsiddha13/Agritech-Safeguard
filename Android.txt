@@ -1,0 +1,135 @@
+implementation 'org.tensorflow:tensorflow-lite:2.5.0'
+implementation 'org.tensorflow:tensorflow-lite-support:0.3.0'
+implementation 'org.tensorflow:tensorflow-lite-metadata:0.2.2'
+_____________________________________________________________________
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/ic_launcher_foreground"
+        android:scaleType="centerCrop"
+        android:layout_gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/selectImageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select Image"/>
+
+    <TextView
+        android:id="@+id/resultTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Result will be shown here"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
+
+
+model class (PlantDiseaseClassifier.kt):
+
+import org.tensorflow.lite.Interpreter
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+
+class PlantDiseaseClassifier(modelPath: String) {
+
+    private val interpreter: Interpreter
+
+    init {
+        val options = Interpreter.Options()
+        interpreter = Interpreter(ByteBuffer.allocateDirect(1024).order(ByteOrder.nativeOrder()), options)
+        interpreter.loadModelFile(modelPath)
+    }
+
+    fun classifyImage(imageData: ByteBuffer): String {
+        // Perform inference here and return the result
+        // Example: You might have a function to process the image data and get the prediction
+        // val prediction = performInference(imageData)
+        // return "Disease: $prediction"
+        return "Disease: PlaceholderResult"
+    }
+
+    fun close() {
+        interpreter.close()
+    }
+}
+____________________________________________________________________________
+
+
+
+
+2.Implement the main activity (MainActivity.kt):
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.Bundle
+import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import java.nio.ByteBuffer
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var imageView: ImageView
+    private lateinit var selectImageButton: Button
+    private lateinit var resultTextView: TextView
+
+    private val plantDiseaseClassifier: PlantDiseaseClassifier by lazy {
+        PlantDiseaseClassifier("path/to/your/model.tflite")
+    }
+
+    private val pickImage = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val selectedImage = result.data?.data
+            val inputStream = selectedImage?.let { contentResolver.openInputStream(it) }
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            imageView.setImageBitmap(bitmap)
+
+            val imageBuffer = convertBitmapToByteBuffer(bitmap)
+            val result = plantDiseaseClassifier.classifyImage(imageBuffer)
+            resultTextView.text = result
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        imageView = findViewById(R.id.imageView)
+        selectImageButton = findViewById(R.id.selectImageButton)
+        resultTextView = findViewById(R.id.resultTextView)
+
+        selectImageButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK)
+            intent.type = "image/*"
+            pickImage.launch(intent)
+        }
+    }
+
+    private fun convertBitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
+        val byteBuffer = ByteBuffer.allocateDirect(4 * bitmap.byteCount)
+        byteBuffer.order(ByteOrder.nativeOrder())
+        bitmap.copyPixelsToBuffer(byteBuffer)
+        byteBuffer.rewind()
+        return byteBuffer
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        plantDiseaseClassifier.close()
+    }
+}
+_________________________________________________________________________________
