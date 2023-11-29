@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>"Dronetech AgriSafeguard
+        Upload Your Crop Image Here"</title>
+    <style> 
+        body {
+            
+            body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #000000;
+    background-image: url('C:\\Users\\SHOBHIT SIDDHA\\Downloads\\BG.jpg'); /* Correctly set the background image URL */
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+        }
+        h1 {
+            font-size: 36px;
+            margin: 40px 0;
+        }
+        #upload-btn {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #001a07;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #upload-btn:hover {
+            background-color: #1c4e10;
+        }
+        #image-display {
+            margin-top: 40px;
+        }
+        img {
+            max-width: 100%;
+        }
+        #result-text {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dronetech AgriSafeguard
+            
+            -Upload Your Crop Image Here</h1>
+        
+        <input type="file" id="image-input" accept=".csv,.jpg,.jpeg,.png" style="display:none;">
+        <button id="upload-btn">Upload Image</button>
+        
+        <div id="image-display"></div>
+        
+        <div id="result-text"></div>
+    </div>
+
+    <script>
+        const uploadBtn = document.getElementById('upload-btn');
+        const imageInput = document.getElementById('image-input');
+        const imageDisplay = document.getElementById('image-display');
+        const resultText = document.getElementById('result-text');
+
+        uploadBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageUrl = e.target.result;
+                    imageDisplay.innerHTML = `<img src="${imageUrl}" alt="Uploaded Image">`;
+                    resultText.textContent = 'Analyzing...';  // Replace with analysis results from backend
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>
